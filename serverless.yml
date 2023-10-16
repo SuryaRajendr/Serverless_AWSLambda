@@ -14,29 +14,89 @@ provider:
 
 functions:
   addTodo:
-    handler: src/addTodo.handler
+    handler: src/todo/addTodo.handler
     events:
       - httpApi:
           path: /
           method: post
   fetchTodos:
-    handler: src/fetchTodos.handler
+    handler: src/todo/fetchTodos.handler
     events:
       - httpApi:
           path: /todos
           method: get
   fetchTodo:
-    handler: src/fetchTodo.handler
+    handler: src/todo/fetchTodo.handler
     events:
       - httpApi:
           path: /todo/{id}
           method: get
   updateTodo:
-    handler: src/updateTodo.handler
+    handler: src/todo/updateTodo.handler
     events:
       - httpApi:
           path: /todo/{id}
-          method: put
+          method: put 
+  insertIntoMongoDB:
+    handler: src/insertIntoMongoDB.handler
+    events:
+      - httpApi:
+          path: /insertIntoMongoDB
+          method: post
+  WrapperLambdaFunction:
+    handler: src/stepFunction/WrapperLambdaFunction.handler
+    events:
+      - httpApi:
+          path: /WrapperLambdaFunction
+          method: get
+  SecondLambdaFunction:
+    handler: src/stepFunction/SecondLambdaFunction.handler
+    events:
+      - httpApi:
+          path: /SecondLambdaFunction
+          method: get
+  ThirdLambdaFunction:
+    handler: src/stepFunction/ThirdLambdaFunction.handler
+    events:
+      - httpApi:
+          path: /ThirdLambdaFunction
+          method: get 
+  FourthLambdaFunction:
+    handler: src/stepFunction/FourthLambdaFunction.handler
+    events:
+      - httpApi:
+          path: /FourthLambdaFunction
+          method: get          
+
+  # StateMachine:
+  #   Comment: "An example Step Functions state machine with parallel Lambdas"
+  #   StartAt: WrapperLambda
+    # States:
+    #   WrapperLambda:
+    #     Type: Task
+    #     Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-WrapperLambdaFunction
+    #     Next: ParallelLambdas
+    #   ParallelLambdas:
+    #     Type: Parallel
+    #     Branches:
+    #       - StartAt: SecondLambda
+    #         States:
+    #           SecondLambda:
+    #             Type: Task
+    #             Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-SecondLambdaFunction
+    #             End: true
+    #       - StartAt: ThirdLambda
+    #         States:
+    #           ThirdLambda:
+    #             Type: Task
+    #             Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-ThirdLambdaFunction
+    #             End: true
+    #     End: true
+    #   WaitForCompletion:
+    #     Type: Task
+    #     Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-FourthLambdaFunction
+    #     End: true
+
 
 resources:
   Resources:
@@ -51,4 +111,38 @@ resources:
         KeySchema:
          - AttributeName: id
            KeyType: HASH
+  MyStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString:
+        Comment: "My Step Functions State Machine"
+        StartAt: WrapperLambda
+        States:
+          WrapperLambda:
+            Type: Task
+            Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-WrapperLambdaFunction
+            Next: ParallelLambdas
+          ParallelLambdas:
+            Type: Parallel
+            Branches:
+              - StartAt: SecondLambda
+        States:
+          SecondLambda:
+            Type: Task
+            Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-SecondLambdaFunction
+            End: true
+              - StartAt: ThirdLambda
+        States:
+          ThirdLambda:
+            Type: Task
+            Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-ThirdLambdaFunction
+            End: true
+        End: true
+      WaitForCompletion:
+        Type: Task
+        Resource: arn:aws:lambda:us-east-1:730193062599:function:serverless-aws-lambda-dev-FourthLambdaFunction
+        End: true
+
+
+
 
